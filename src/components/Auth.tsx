@@ -1,15 +1,16 @@
 import { FC, SyntheticEvent, useEffect, useRef, useState } from "react";
-import { AuthUI } from "./ui/auth-ui";
+import { AuthUI } from "./ui/auth/auth-ui";
 import { useCustomDispatch, useCustomSelector } from "../services/store";
 import { fetchAuth } from "../services/slices/authSlice";
 import { TLoginData } from "../services/api";
-import { useNavigate } from "react-router-dom";
+import { redirect, useNavigate } from "react-router-dom";
 
 export const AuthForm: FC = () => {
     const loginRef = useRef<HTMLInputElement | null>(null);
     const passwordRef = useRef<HTMLInputElement | null>(null);
     const dispatch = useCustomDispatch();
     const response = useCustomSelector(store => store.auth.response)
+    const error = useCustomSelector((store) => store.auth.error);
     const navigate = useNavigate();
     const [loginData, setLoginData] = useState<TLoginData>({
         login: '',
@@ -18,22 +19,17 @@ export const AuthForm: FC = () => {
 
     const onSubmit = (e: SyntheticEvent) => {
         e.preventDefault();
-        const login = loginRef.current?.value;
-        const password = passwordRef.current?.value;
-        if (login !== '' && login && password !== '' && password) {
-            setLoginData({login: login, password: password});
-            dispatch(fetchAuth(loginData))
-        } else {
-            console.log('Введите логин и пароль');
-        }
+        setLoginData({login: loginRef.current!.value, password: passwordRef.current!.value})
     }
 
     useEffect(() => {
+        dispatch(fetchAuth(loginData))
         if (response === 'success') {
-            console.log(response)
             navigate('/general')
+        } else {
+            return console.log(error);
         }
-    },[response])
+    },[loginData, response, error])
 
     return (
         <AuthUI 
